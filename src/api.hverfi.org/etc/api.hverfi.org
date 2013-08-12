@@ -1,0 +1,26 @@
+<VirtualHost *:80>
+	ServerAdmin ewt@avajadi.org
+	ServerName api.hverfi.org
+	DocumentRoot "${APACHE_STATIC_VHOSTS_DIR}/api.hverfi.org/static"
+	php_value include_path ".:${APACHE_STATIC_VHOSTS_DIR}/api.hverfi.org/lib"
+	<Directory "${APACHE_STATIC_VHOSTS_DIR}/api.hverfi.org/static/">
+		Options Indexes FollowSymLinks MultiViews
+		AllowOverride None
+		Order allow,deny
+		allow from all
+	</Directory>
+
+	Alias /lab "${APACHE_STATIC_VHOSTS_DIR}/api.hverfi.org/static/lab"
+	Alias /api "${APACHE_STATIC_VHOSTS_DIR}/api.hverfi.org/static/api"
+
+	# Everything not matched above goes to the loader
+	AliasMatch /.* "${APACHE_STATIC_VHOSTS_DIR}/api.hverfi.org/lib/loader.php"
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel debug
+
+	CustomLog ${APACHE_LOG_DIR}/api.hverfi.org/access.log combined
+	ErrorLog ${APACHE_LOG_DIR}/api.hverfi.org/error.log
+</VirtualHost>
+

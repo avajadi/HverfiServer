@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use File::Spec;
+use File::Basename;
+use Cwd 'abs_path';
+
+my $dirname = dirname( File::Spec->rel2abs( __FILE__ ) );
+my $siteroot = abs_path( $dirname . '/../src' ) ;
+
+my $template_file = $siteroot . '/api.hverfi.org/etc/api.hverfi.org';
+open( TEMPLATE, $template_file ) or die($! . "[$template_file]");
+my $template = join( '', <TEMPLATE> );
+close( TEMPLATE );
+
+$template =~ s/\${APACHE_STATIC_VHOSTS_DIR}/$siteroot/gs;
+open( CONF, '>', 'api.hverfi.org' ) or die( "Failed to open configuration file for writing: $1" );
+print CONF ( $template );
+close( CONF );

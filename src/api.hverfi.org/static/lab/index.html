@@ -1,0 +1,162 @@
+<html>
+	<head>
+		<title>Test Bench</title>
+		<style type="text/css">
+			body { 
+				padding:0;
+			}
+			h1,h3 {
+				width:100%;
+				font-family:palatino,sansserif;
+				padding:8px 0 5px 0.4em;
+				margin:0;
+			}
+			h1 {
+				background-color:#333;
+				color:#aa9;
+			}
+			h3 {
+				color:#333;
+				background-color:#aa9;
+			}
+			#resultdisplay {
+				float:right;
+				text-align:left;
+				width:49%;
+				height:100%;
+			}
+			#input {
+				float:left;
+				width:49%;
+				height:100%
+			}
+			#request,#result {
+				border:solid 1px #999;
+				height:200px;
+				margin:0 0 10px 0;
+			}
+			#appinput {
+				float:left;
+				width:30%;
+			}
+			#messageinput {
+				float:right;
+				text-align:left;
+				width:70%;
+			}
+			#datainput,#datatext{
+				width:100%;
+			}
+			
+			#submitter {
+				text-align:right;
+			}
+		</style>
+		<script src="jquery.js"></script>
+		<script src="/api/hverfi.js">alert('No Hverfi!')</script>
+		<script>
+			var app_meta = {};
+			function shoot() {
+				var data = $('#datatext').val();
+				var pathinfo = $('#pathinfo').val();
+				var app = $('#app').val();
+				var requestData = '';
+				if( data != "" ) {
+					try {
+						requestData = JSON.stringify(JSON.parse(data),null,'\t');
+					} catch( e ) {
+						requestData = "Illegal JSON format:" + e;
+					}
+				}
+				$('#request').text( "URI:" + "/" + app + "/" + pathinfo + "\ndata\n" + requestData );
+				$.post( "/" + app + "/" + pathinfo, data , function(data) {
+					var result = JSON.parse( data );
+					$('#result').text( JSON.stringify(result, null, '\t') );
+				});
+			}
+			var onAppChange = function(){
+				var appName = '';
+				$("#app option:selected").each(function () {
+					appName += $(this).text();
+				});
+				if( appName == '' ) appName = 'poi';
+				
+				$.get( 'http://api.hverfi.org/' + appName + '/meta/', function(data){
+					var meta = JSON.parse( data );
+					for (var i in meta) {
+						var message = meta[i];
+						var description = message.description;
+						var name = message.name;
+						//var post_data = message.post_data;
+						$('#pathinfo').append( new Option(name + ' - ' + description,name) );
+						app_meta[name] = message.post_data;
+					}
+					onMessageChange();
+				});
+			};
+			var onMessageChange = function(){
+				var messageName = '';
+				$("#pathinfo option:selected").each(function () {
+					messageName = $(this).val();
+				});
+				if( messageName == '' ) messageName = 'add';				
+				$('#datatext').text( JSON.stringify( app_meta[messageName], null, '\t' ) )
+			};
+			
+			$( document ).ready( function() {
+				$.get( '/meta/', function(data) {
+					var apps = JSON.parse( data );
+					apps.forEach(
+						function( app ) {
+							$('#app').append(new Option(app));
+						}
+					);
+				});
+				$('#app').change( onAppChange );
+				$('#pathinfo').change( onMessageChange );
+				onAppChange();
+				var jsobj = {
+					longitude:13.234,
+					latitude:58.435,
+					name:"Home",
+					tags:new Array( 'head','to','tail'),
+					type:"PointOfInterest"
+				};
+				var mapper = new Mapper();
+				var loc2 = mapper.mapFromObject( jsobj );
+				var loc = new PointOfInterest( 10, 12, 'Namne', new Array( 'tag1','tag2', 'tag3' ,'tag4' , 'tag5' ) );
+				$('#request').text( 'loc:' + JSON.stringify( loc, null, '\t' )  + '\nloc2:' + JSON.stringify( loc2, null, '\t' ) );
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Hverfi API: Test Bench</h1>
+		<div id="input">
+			<form>
+				<div id="appinput">
+					<h3>App</h3>
+					<select id="app">
+					</select><br />
+				</div>
+				<div id="messageinput">
+					<h3>Message</h3>
+					<select id="pathinfo">
+					</select><br />
+				</div>
+				<div id="datainput">
+					<textarea id="datatext" cols="80" rows="30"></textarea><br />
+				</div>
+				<div id="submitter">
+					<input type="button" onclick="shoot()" value="shoot">
+				</div>
+			</form>
+		</div>
+		<div id="resultdisplay">
+		<h3>Request</h3>
+		<pre id="request"></pre>
+		<h3>Result</h3>
+		<pre id="result"></pre>
+		</div>
+	</body>
+</html>
+
